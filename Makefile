@@ -176,7 +176,7 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_halt\
-	_test1 _test2 _test3 _test4 #20163081
+	_test1 _test2 _test3 _test4 #gsniper777
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -237,10 +237,6 @@ qemu-nox-gdb: fs.img xv6.img .gdbinit
 	@echo "*** Now run 'gdb'." 1>&2
 	$(QEMU) -nographic $(QEMUOPTS) -S $(QEMUGDB)
 
-# SKKU operating system
-PROJECTNUM=4
-# enter your ID
-STUDENTID=2011311671
 
 # DO NOT EDIT
 tarball:

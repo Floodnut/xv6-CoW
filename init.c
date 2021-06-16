@@ -8,7 +8,7 @@
 char *argv[] = { "sh", 0 };
 
 int
-main(void)
+main(void) //gsniper777
 {
   int pid, wpid;
 
@@ -18,8 +18,8 @@ main(void)
   }
   dup(0);  // stdout
   dup(0);  // stderr
-  printf(0, "id: 20163081\n"); //20163081
-  printf(0, "name: kuemjong.jeong\n"); //20163081
+  printf(0, "id: gsniper777\n"); //gsniper777
+  printf(0, "name: floodnut\n"); //gsniper777
   for(;;){
     pid = fork();
     if(pid < 0){

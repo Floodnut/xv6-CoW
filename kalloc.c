@@ -12,7 +12,7 @@
 void freerange(void *vstart, void *vend);
 extern char end[]; // first address after kernel loaded from ELF file
 int numfreepages=0;
-//uint pgrefcount[PHYSTOP >> PGSHIFT]; //20163081
+uint pgrefcount[PHYSTOP >> PGSHIFT]; //gsniper777
 
 struct run {
   struct run *next;
@@ -22,7 +22,6 @@ struct {
   struct spinlock lock;
   int use_lock;
   struct run *freelist;
-  uint pgrefcount[PHYSTOP >> PGSHIFT]; //20163081
 } kmem;
 
 // Initialization happens in two phases.
@@ -46,12 +45,12 @@ kinit2(void *vstart, void *vend)
 }
 
 void
-freerange(void *vstart, void *vend)
+freerange(void *vstart, void *vend)//gsniper777
 {
   char *p;
   p = (char*)PGROUNDUP((uint)vstart);
   for(; p + PGSIZE <= (char*)vend; p += PGSIZE){
-    kmem.pgrefcount[V2P(p) >> PGSHIFT] = 0; //20163081
+    pgrefcount[V2P(p) >> PGSHIFT] = 0; //gsniper777
     kfree(p);
   }
 }
@@ -62,29 +61,23 @@ freerange(void *vstart, void *vend)
 // call to kalloc().  (The exception is when
 // initializing the allocator; see kinit above.)
 void
-kfree(char *v)
+kfree(char *v)//gsniper777
 {
   struct run *r;
-
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
     panic("kfree");
-
-  // Fill with junk to catch dangling refs.
-  //memset(v, 1, PGSIZE);
-
   if(kmem.use_lock)
     acquire(&kmem.lock);
-  r = (struct run*)v;
-  if(kmem.pgrefcount[V2P(v)>>PGSHIFT]>0){ //20163081  
-    kmem.pgrefcount[V2P(v)>>PGSHIFT] -= 1; //20163081
-  }
-  if(kmem.pgrefcount[V2P(v)>>PGSHIFT]==0){ //20163081
-    // Fill with junk to catch dangling refs.
-    memset(v, 1, PGSIZE);
-    numfreepages++;
-    r->next = kmem.freelist;
-    kmem.freelist = r;
-  }
+  r = (struct run*)v;//gsniper777
+  if(pgrefcount[V2P(v)>>PGSHIFT]>0){ //gsniper777  
+    pgrefcount[V2P(v)>>PGSHIFT] -= 1; //gsniper777
+  }//gsniper777
+  if(pgrefcount[V2P(v)>>PGSHIFT]==0){ //gsniper777
+    memset(v, 1, PGSIZE);//gsniper777
+    numfreepages++;//gsniper777
+    r->next = kmem.freelist;//gsniper777
+    kmem.freelist = r;//gsniper777
+  }//gsniper777
   if(kmem.use_lock)
     release(&kmem.lock);
 }
@@ -101,7 +94,7 @@ kalloc(void)
     acquire(&kmem.lock);
   numfreepages--;
   r = kmem.freelist;
-  kmem.pgrefcount[V2P((char*)r) >> PGSHIFT] = 1; //20163081
+  pgrefcount[V2P((char*)r) >> PGSHIFT] = 1; //gsniper777
   if(r){
     kmem.freelist = r->next;
   }
@@ -114,32 +107,32 @@ int freemem(){
 	return numfreepages;
 }
 
-uint get_refcounter(uint pa){ //20163081
-  if(kmem.use_lock)
-    acquire(&kmem.lock);
-  uint refCount = kmem.pgrefcount[pa>>PGSHIFT];
-  if(kmem.use_lock)
-    release(&kmem.lock);
-  return refCount;
-}
+uint get_refcounter(uint pa){ //gsniper777
+  if(kmem.use_lock) //gsniper777
+    acquire(&kmem.lock); //gsniper777
+  uint refCount = pgrefcount[pa>>PGSHIFT]; //gsniper777
+  if(kmem.use_lock) //gsniper777
+    release(&kmem.lock); //gsniper777
+  return refCount; //gsniper777
+} //gsniper777
 
-void dec_refcounter(uint pa){ //20163081
-  if(kmem.use_lock)
-    acquire(&kmem.lock);
-  if(kmem.pgrefcount[pa>>PGSHIFT] > 0){
-    kmem.pgrefcount[pa>>PGSHIFT] -= 1; 
-  }
-  else{
-   kmem.pgrefcount[pa>>PGSHIFT] = 0;
-  }
-  if(kmem.use_lock)
-    release(&kmem.lock);
-}
+void dec_refcounter(uint pa){ //gsniper777
+  if(kmem.use_lock) //gsniper777
+    acquire(&kmem.lock); //gsniper777
+  if(pgrefcount[pa>>PGSHIFT] > 0){ //gsniper777
+    pgrefcount[pa>>PGSHIFT] -= 1;  //gsniper777
+  }//gsniper777
+  else{//gsniper777
+   pgrefcount[pa>>PGSHIFT] = 0;//gsniper777
+  }//gsniper777
+  if(kmem.use_lock)//gsniper777
+    release(&kmem.lock);//gsniper777
+}//gsniper777
 
-void inc_refcounter(uint pa){ //20163081
-  if(kmem.use_lock)
-    acquire(&kmem.lock);
-  kmem.pgrefcount[pa>>PGSHIFT] += 1;
-  if(kmem.use_lock)
-    release(&kmem.lock);
-}
+void inc_refcounter(uint pa){ //gsniper777
+  if(kmem.use_lock)//gsniper777
+    acquire(&kmem.lock);//gsniper777
+  pgrefcount[pa>>PGSHIFT] += 1;//gsniper777
+  if(kmem.use_lock)//gsniper777
+    release(&kmem.lock);//gsniper777
+}//gsniper777

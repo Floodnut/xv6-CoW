@@ -69,9 +69,9 @@ void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
 int freemem(void);
-uint get_refcounter(uint pa); //20163081
-void dec_refcounter(uint); //20163081
-void inc_refcounter(uint); //20163081
+uint get_refcounter(uint pa); //gsniper777
+void dec_refcounter(uint); //gsniper777
+void inc_refcounter(uint); //gsniper777
 
 
 // kbd.c
@@ -182,7 +182,7 @@ void            freevm(pde_t*);
 void            inituvm(pde_t*, char*, uint);
 int             loaduvm(pde_t*, char*, struct inode*, uint, uint);
 pde_t*          copyuvm(pde_t*, uint);
-void            pagefault(void); //20163081
+void            pagefault(void); //gsniper777
 void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);

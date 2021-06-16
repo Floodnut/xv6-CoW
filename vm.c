@@ -319,12 +319,13 @@ clearpteu(pde_t *pgdir, char *uva)
 // Given a parent process's page table, create a copy
 // of it for a child.
 pde_t*
-copyuvm(pde_t *pgdir, uint sz)
-{
+copyuvm(pde_t *pgdir, uint sz) //gsniper777
+{   
   pde_t *d;
   pte_t *pte;
-  uint pa, flags;
-
+  uint pa;
+  //uint i, flags; gsniper777
+  //char *mem; gsniper777
   if((d = setupkvm()) == 0)
     return 0;
   for(uint i = 0; i < sz; i += PGSIZE){
@@ -332,48 +333,56 @@ copyuvm(pde_t *pgdir, uint sz)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P)) 
       panic("copyuvm: page not present");
-    *pte =  *pte & (~PTE_W); //20163081
+    *pte =  *pte & (~PTE_W); //gsniper777
     pa = PTE_ADDR(*pte);
-    flags = PTE_FLAGS(*pte); //20163081
-    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0) {//20163081
-      freevm(d);
-      lcr3(V2P(pgdir));
-      return 0;
-    }
-    inc_refcounter(pa); //20163081
-  }
-  lcr3(V2P(pgdir));
+
+    //flags = PTE_FLAGS(*pte); gsniper777
+    //if((mem = kalloc()) == 0) gsniper777
+    //  goto bad; gsniper777
+    //memmove(mem, (char*)P2V(pa), PGSIZE); gsniper777
+    
+    if(mappages(d, (void*)i, PGSIZE, pa, PTE_FLAGS(*pte)) < 0) {//gsniper777
+      freevm(d); //gsniper777
+      lcr3(V2P(pgdir)); //gsniper777
+      return 0; //gsniper777
+    } //gsniper777
+    inc_refcounter(pa); //gsniper777
+  }//gsniper777
+  lcr3(V2P(pgdir)); //gsniper777
   return d;
+
+  //bad: gsniper777
+  // freevm(d); gsniper777
+  // return 0; gsniper777
 }
 
-/*===========20163081===========*/
-void pagefault(void){ //20163081
-  uint pa,paRefCount, pgfVA = rcr2();
-  pte_t *pte;
-  char *mem;
+/*===========gsniper777===========*/
+void pagefault(void){ //gsniper777
+  uint pa,paRefCount, pgfUserVA = rcr2(); //gsniper777
+  pte_t *pte; //gsniper777
+  char *mem;  //gsniper777
 
-  if (pgfVA >= KERNBASE || (pte = walkpgdir(proc->pgdir,(void*)pgfVA,0)) == 0 || !(*pte & PTE_P)|| !(*pte & PTE_U)){
-    proc->killed = 1;
-    return;
-  }
-  pa = PTE_ADDR(*pte);
-  paRefCount = get_refcounter(pa);
-  if (paRefCount > 1){
-    if ((mem = kalloc()) == 0 ) { 
-      proc->killed = 1;
-      return;
-    }
-    *pte = V2P(mem) | PTE_P | PTE_W | PTE_U;
-    memmove(mem, (char*)P2V(pa), PGSIZE);
-    dec_refcounter(pa);
-    inc_refcounter(V2P(mem)>>PGSHIFT);
-  }
-  else if (paRefCount == 1) {
-    *pte = (*pte | PTE_W);
-  }
-  lcr3(V2P(proc->pgdir));
-}
-/*===========20163081===========*/
+  if ((pte = walkpgdir(proc->pgdir,(void*)pgfUserVA,0)) == 0 || !(*pte & PTE_P)|| pgfUserVA >= KERNBASE||!(*pte & PTE_U)){ //gsniper777
+    proc->killed = 1; //gsniper777
+    return; //gsniper777
+  } //gsniper777
+  pa = PTE_ADDR(*pte); //gsniper777
+  paRefCount = get_refcounter(pa); //gsniper777
+  if (paRefCount > 1){ //gsniper777
+    if ((mem = kalloc()) == 0 ) { //gsniper777
+      proc->killed = 1; //gsniper777
+      return; //gsniper777
+    } //gsniper777
+    *pte = V2P(mem) | PTE_P | PTE_W | PTE_U; //gsniper777
+    memmove(mem, (char*)P2V(pa), PGSIZE); //gsniper777
+    dec_refcounter(pa); //gsniper777
+  } //gsniper777
+  else if (paRefCount == 1) { //gsniper777
+    *pte = (*pte | PTE_W); //gsniper777
+  } //gsniper777
+  lcr3(V2P(proc->pgdir)); //gsniper777
+} //gsniper777
+/*===========gsniper777===========*/
 
 
 //PAGEBREAK!
